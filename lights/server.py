@@ -33,6 +33,7 @@ def now():
 
 history_logs = []
 
+local_ip_prefix='192.168'
 ip_map =  {
     '192.168.1.13': 'Vasia (vasinator)',
     '192.168.1.4': 'Olya Samsung TV??? lol',
@@ -66,9 +67,10 @@ class RF_Outlet():
         date, timestamp = now()
         ip_addr = request.remote_addr
         probable_requestor = ip_map.get(ip_addr,'Unknown')
-        details = (date, timestamp, self.remote_button, self.name, code, ip_addr, probable_requestor)
+        from_lan = ip_addr.startswith('192.168') or ip_addr == '127.0.0.1'
+        details = (date, timestamp, self.remote_button, self.name, code, from_lan)
 
-        logstr = '{}    {} [{}: {:25}, code: {}, ip: {}, prequestor: {}'.format(*details)
+        logstr = '{}    {} [{}: {:25}, code: {}, from_lan: {}, ip: {}, prequestor: {}'.format(*details, ip_addr, probable_requestor)
         logging.info(logstr)
         history_logs.append(details)
         rfdevice = RFDevice(gpio)
@@ -137,8 +139,7 @@ index_html = """
                     <td style="width:200px">Remote Button</td>
                     <td style="width:200px">Target</td>
                     <td style="width:200px">Code</td>
-                    <td style="width:150px">Request IP</td>
-                    <td style="width:400px">(Probable) Requestor</td>
+                    <td style="width:150px">From LAN?</td>
                 </tr>
                 {history_log}
             </table>
@@ -149,7 +150,6 @@ index_html = """
 
 history_log_template = """
 <tr>
-    <td>{}</td>
     <td>{}</td>
     <td>{}</td>
     <td>{}</td>
@@ -223,4 +223,4 @@ def turn_off(lid):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=9999)
+    app.run(host='0.0.0.0', port=80)
