@@ -44,11 +44,11 @@ PYGAME_WINDOW_SIZE=640
 GAME_GRID_SIZE = 32
 DPI = PYGAME_WINDOW_SIZE / GAME_GRID_SIZE
 UPDATE_SNAKE = pygame.USEREVENT+1
-REFRESH_RATE = 50
+REFRESH_RATE = 30
 
 grid = [[0 for _ in range(32)] for __ in range(32)]
 snake = [(14,16), (15,16), (16,16)]
-food = [(20,16)]
+food = set([(20,16)])
 current_direction = Direction.DOWN
 last_updated_direction = Direction.DOWN
 is_game_over = False
@@ -107,20 +107,33 @@ def reset_game():
   is_game_over = False
   grid = [[0 for _ in range(32)] for __ in range(32)]
   snake = [(14,16), (15,16), (16,16)]
-  food = [(20,16)]
+  food = set([(20,16)])
   current_direction = Direction.DOWN
   last_updated_direction = Direction.DOWN
   pygame.time.set_timer(UPDATE_SNAKE, REFRESH_RATE) 
 
+def chance_food():
+  if (random.randint(0,100) < 2):
+    make_food()
 
-def eat_food():
+## is a problem if snake occupies most of grid
+def make_food():
+    while(True):
+      new_food = random.randint(0,GAME_GRID_SIZE-1),random.randint(0,GAME_GRID_SIZE-1)
+      if new_food not in snake:
+        break
+    food.add(new_food)
+
+
+def maybe_eat_food(coor):
   global food
-  while(True):
-    new_food = random.randint(0,GAME_GRID_SIZE-1),random.randint(0,GAME_GRID_SIZE-1)
-    if new_food not in snake:
-      break
-  food.append(new_food)
-  del food[0]
+  if coor in food:
+    food.remove(coor)
+    make_food()
+    return True
+  return False
+
+
 
 def update_direction(direction):
   global current_direction
@@ -133,6 +146,12 @@ def update_direction(direction):
   elif direction == Direction.RIGHT and last_updated_direction != Direction.LEFT:
     current_direction = Direction.RIGHT
   
+def cut_half_snake():
+  global snake
+  if (len(snake) < 6):
+    return
+  snake = snake[len(snake)//2:]
+
 def update_snake():
   global snake, last_updated_direction, is_game_over
   snake_head = snake[-1]
@@ -153,9 +172,8 @@ def update_snake():
 
   else:
     snake.append((i,j))
-    if ((i,j) in food):
-      eat_food()
-    else:
+    ate = maybe_eat_food((i,j))
+    if not ate:
       del snake[0]
     last_updated_direction = current_direction
   
@@ -171,16 +189,20 @@ while True:
     if (not is_game_over):
       if event.type == UPDATE_SNAKE:
         update_snake()
+        chance_food()
 
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LEFT:
           update_direction(Direction.LEFT)
-        if event.key == pygame.K_RIGHT:
+        elif event.key == pygame.K_RIGHT:
           update_direction(Direction.RIGHT)
-        if event.key == pygame.K_DOWN:
+        elif event.key == pygame.K_DOWN:
           update_direction(Direction.DOWN)
-        if event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP:
           update_direction(Direction.UP)
+        elif event.key == pygame.K_s:
+          cut_half_snake()
+        
 
   if (is_game_over):
     draw_game_over()
