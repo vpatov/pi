@@ -44,7 +44,7 @@ PYGAME_WINDOW_SIZE=640
 GAME_GRID_SIZE = 32
 DPI = PYGAME_WINDOW_SIZE / GAME_GRID_SIZE
 UPDATE_SNAKE = pygame.USEREVENT+1
-REFRESH_RATE = 30
+REFRESH_RATE = 55
 
 grid = [[0 for _ in range(32)] for __ in range(32)]
 snake = [(14,16), (15,16), (16,16)]
@@ -113,7 +113,7 @@ def reset_game():
   pygame.time.set_timer(UPDATE_SNAKE, REFRESH_RATE) 
 
 def chance_food():
-  if (random.randint(0,100) < 2):
+  if (random.randint(0,100) < 15):
     make_food()
 
 ## is a problem if snake occupies most of grid
