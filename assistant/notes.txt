@@ -1,4 +1,0 @@
-#audio
-alias rawaudiostream='arecord -f S16_LE -c 1 -t raw'
-alias stream_to_vasinator='arecord -f cd -c 1 -t raw | oggenc - -r -C 1 | ssh vas@vasinator mplayer -'
-
