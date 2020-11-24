@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # coding: utf-8
 from flask import Flask, request
+import socket
+
 import subprocess
 import logging
 import datetime
@@ -20,6 +22,7 @@ class TestBackupRFDevice:
     def cleanup(self, *kwargs):
         pass
 
+hostname=socket.gethostname()
 
 try:
     from rpi_rf import RFDevice
@@ -84,23 +87,25 @@ class RF_Outlet():
     def turn_off(self):
         self.send_rf_signal(code=self.off)
 
+rf_outlets = {
+    1: RF_Outlet("Vasia's Room", 1, on=1398067, off=1398076),
+    2: RF_Outlet("П",2, on=1398211, off=1398220),
+    3: RF_Outlet("Olya's Room", 3, on=1398531, off=1398540),
+    4: RF_Outlet("Michael's Room", 4, on=1400067, off=1400076),
+    5: RF_Outlet("Living Room", 5, on=1406211, off=1406220)
+}
 
-rf1 = RF_Outlet("Vasia's Room", 1, on=1398067, off=1398076)
-rf4 = RF_Outlet("Michael's Room", 4, on=1400067, off=1400076)
-rf5 = RF_Outlet("Living Room", 5, on=1406211, off=1406220)
-
-rf_outlets = {1: rf1, 4: rf4, 5: rf5}
-
-# Simple flask app
-
+# mega simple flask app
 app = Flask(__name__)
-
 
 index_html = """
 <html>
     <body>
-        <div style="font-size: 36px">
+        <div style="font-size: 32px">
             <a href="/">Pi99</a>
+            <div>
+                <p style="font-size: 20px"> {fortune} </p>
+            </div>
             <table style="font-size: 32px">
                 <tr>
                     <td style="width:270px"><td>
@@ -174,6 +179,13 @@ rf_entry_template = """
 """
 
 
+def get_fortune():
+    i = 0
+    output = subprocess.getoutput('/usr/games/fortune')
+    while (len(output) > 300 and i < 20):
+        output = subprocess.getoutput('fortune')
+        i += 1
+    return output
 
 def get_history_logs():
     global history_logs
@@ -191,7 +203,8 @@ def render_template():
         history_log=get_history_logs(),
         rf_outlets=get_rf_outlets(),
         boot_time=boot_time,
-        server_start_time=server_start_time)
+        server_start_time=server_start_time,
+        fortune=get_fortune())
 
 
 def send_rf_outlet(lid, on=True):
@@ -223,4 +236,5 @@ def turn_off(lid):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    host, port = ('0.0.0.0',80) if hostname == 'pi99' else ('127.0.0.1',8080)
+    app.run(host=host, port=port)
